@@ -1,32 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
   <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Pries.github.io : My useful programming pages geared towards scientific programming" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Paul&#39;s Presumptions Python Pages by pries</title>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Pries.github.io</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
+    <div class="wrapper">
+      <header>
+        <h1>Paul&#39;s Presumptions Python Pages</h1>
+        <p>My useful programming pages geared towards scientific programming</p>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/pries">View on GitHub</a>
 
-          <h1 id="project_title">Pries.github.io</h1>
-          <h2 id="project_tagline">My useful programming pages geared towards scientific programming</h2>
+        <p class="view"><a href="https://github.com/pries">View My GitHub Profile</a></p>
 
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
+      </header>
+      <section>
         <h1>
 <a name="how-to-do-embarrassingly-parallel-processing-in-python-across-multiple-cores-and-multiple-computers" class="anchor" href="#how-to-do-embarrassingly-parallel-processing-in-python-across-multiple-cores-and-multiple-computers"><span class="octicon octicon-link"></span></a>How to do embarrassingly parallel processing in python across multiple cores and multiple computers</h1>
 
@@ -55,37 +51,115 @@
 
 <ul>
 <li> Ipython (that's it!)</li>
-</ul><p>Instructions:
-1. at the command line type:
-<code>ipcluster start --n=4</code></p>
+</ul><p>Instructions:</p>
 
-<p>This sets up a cluster of processes for Ipython.  <code>n</code> is the number of processes to start, which should be equal to the number of cores you want to use.  Open another terminal and start and ipython (or ipython+pylab) session.</p>
+<ul>
+<li>at the command line type:</li>
+</ul><p><code>ipcluster start --n=4</code></p>
 
-<h2>
+<p>This sets up a cluster of processes for Ipython.  <code>n</code> is the number of processes to start, which should be equal to the number of cores you want to use.  </p>
+
+<ul>
+<li>Open another terminal and start and ipython (or ipython+pylab) session.</li>
+</ul><h2>
 <a name="how-to-run-code-in-parallel-same-for-both-single-machine-and-multiple-machines" class="anchor" href="#how-to-run-code-in-parallel-same-for-both-single-machine-and-multiple-machines"><span class="octicon octicon-link"></span></a>How to run code in parallel (same for both single machine and multiple machines!!)</h2>
 
-<p>So to work this you need to set up your function to use python's map function.  </p>
+<p>So to work this you need to set up your function to use python's map function.  The non-parallel way of doing it (again, using the sin example from above):</p>
+
+<pre lang="y=map(np.sin,x)```"><code>
+Note that you can have more than one variable to iterate over with map, but for simplicity's sake I'm just dealing with one variable here.  Now for the parallel version:
+
+```python
+import numpy as np
+from IPython.parallel import Client
+rc=Client()
+dview=rc[:]
+dview.execute('import numpy as np')
+lview=rc.load_balanced_view()
+lview.block=True
+y=lview.map(np.sin,x)
+</code></pre>
+
+<p>That's it!! Now for a little bit of an explanation what's going on.  <code>Client()</code> is a client to your ipcluster that you already have running.  <code>dview</code> is a direct view, which is a direct connection to each of the processes. <code>dview</code> also lets you directly tell all the processes to do stuff, like say load the numpy library, using the <code>execute</code> function. <code>lview</code> is a load balanced view.  The difference between the two is that <code>dview</code> will take n chunks of data and divide them over m processes (i.e. each process gets n/m threads), but <code>lview</code> accounts for the fact that not every iteration will take the same amount of time to compute and balances the computation between processes.  This is especially important if you are running over multiple computers where the processors may have different speeds.</p>
+
+<p>Now say that you have a god awful hideously computationally expensive function that you've already optimized by putting it into c code and wrapping it using cython (this is what I'm using it for) and it has a whole bunch of parameters other than the one we're iterating over.  The above still works with minimal changes:</p>
+
+<p>Here's my example function:</p>
+
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">myfxn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+  <span class="o">....</span>
+  <span class="k">return</span> <span class="n">z</span>
+</pre></div>
+
+<p>Here's my code to run it:</p>
+
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">mylib</span>
+
+<span class="c">#set up parallel processes, start ipcluster from command line prior!</span>
+<span class="kn">from</span> <span class="nn">IPython.parallel</span> <span class="kn">import</span> <span class="n">Client</span>
+<span class="n">rc</span><span class="o">=</span><span class="n">Client</span><span class="p">()</span>
+<span class="n">dview</span><span class="o">=</span><span class="n">rc</span><span class="p">[:]</span>
+
+<span class="c">#...do stuff to get iterable_of_a and b,c,d....</span>
+
+<span class="n">mylamfxn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span><span class="n">mylib</span><span class="o">.</span><span class="n">myfxn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+
+<span class="n">dview</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'import mylib'</span><span class="p">)</span>
+<span class="n">mydict</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+<span class="n">dview</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">mydict</span><span class="p">)</span>
+<span class="n">lview</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">load_balanced_view</span><span class="p">()</span>
+<span class="n">lview</span><span class="o">.</span><span class="n">block</span><span class="o">=</span><span class="bp">True</span>
+<span class="n">y</span><span class="o">=</span><span class="n">lview</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">mylamfxn</span><span class="p">,</span><span class="n">iterable_of_a</span><span class="p">)</span>
+</pre></div>
+
+<p>So there's two new things go on here.  <code>lambda</code> is a built in python thingy that you can use to make a function of multiple parameters into a function of a single parameter setting constants to all of the non-iterable parameters.  The <code>push()</code> function on the directview lets you send data from your main program to the various nodes on the ipcluster.  In this case, we're passing along the other parameters needed by <code>mylamfxn</code>.  Any this works, but there are some important caveats.</p>
+
+<h3>
+<a name="caveat-programmor" class="anchor" href="#caveat-programmor"><span class="octicon octicon-link"></span></a>Caveat Programmor</h3>
+
+<p>You have to be really careful about your working directory and <code>$PYTHONPATH</code>.  <code>mylib</code> needs to be on the <code>$PYTHONPATH</code> for all of the ipython processes, or else there will be an error.  Also, unless you set it specifically, the working directory for ipcluster will be the directory you started the process in, which can be important if your hideous function needs to find particular files (like mine did).</p>
+
+<p>Having said that, there is literally no change to your python program between running on a computer with multiples cores and running across cores on multiple computers.  The only changes are in worrying about setting up your cluster properly, which I detail below.</p>
 
 <h2>
 <a name="what-you-need-to-get-started-multiple-computers" class="anchor" href="#what-you-need-to-get-started-multiple-computers"><span class="octicon octicon-link"></span></a>What you need to get started (multiple computers)</h2>
 
-<ol>
+<ul>
 <li>IP address of the host computer</li>
-<li>Know where the ipython directory is on each computer</li>
+<li>Know where the <code>$IPYTHONPATH</code> is on each computer</li>
 <li>All computers in the cluster can see the host computer</li>
 <li>Understand how python working directory and <code>$PYTHONPATH</code> affect how your code works
-<strong>Note</strong>:  I don't know if this will work across different architectures.  My Mac wouldn't play nice with the three computers running Linux and I haven't had a chance to troubleshoot it....</li>
-</ol>
-      </section>
-    </div>
+<strong>Note</strong>:  I don't know if this will work across different architectures.  My Mac wouldn't play nice with three computers running Linux and I haven't had a chance to troubleshoot it....</li>
+</ul><h3>
+<a name="step-by-step-instructions" class="anchor" href="#step-by-step-instructions"><span class="octicon octicon-link"></span></a>Step-by-step instructions:</h3>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+<ul>
+<li>If you did my example above with a local cluster, kill it with CTRL-C</li>
+<li>run the command <code>ipcontroller --ip=[host ip here]</code> on the computer you want to actually run your main python program
+This starts the controller process.  Your previous ipcluster command did this automagically, but you're doing it differently this time.<br>
+</li>
+<li>Open a new terminal on the local computer.  Run the command <code>ipcluster engines --n=[number of cores in machine]</code>
+</li>
+<li>Do the following on each of the cluster computers
+
+<ul>
+<li>Copy <code>$IPYTHONDIR/profile_default/security/ipcontroller-engine.json</code> from the host to the same directory the cluster computer.  This has the authorization needed to talk to the controller as well as the ip the controller is listening on</li>
+<li>run <code>ipcluster engine --n=[number of cores in machine]</code>
+</li>
+<li>Every time you do this, you should get a message on the host machine terminal running <code>ipcontroller</code> saying the new cores are registered</li>
+</ul>
+</li>
+<li>compute away! but bear in mind the caveats regarding working directories and that there's overhead of talking between the cluster nodes and the main host</li>
+</ul><h3>
+<a name="caveats-for-clusters" class="anchor" href="#caveats-for-clusters"><span class="octicon octicon-link"></span></a>Caveats for clusters</h3>
+
+<p>The above has security issues.  These can be fixed via ssh, but that will slow things down and is something I haven't had time to play with.  Firewalls are your friend.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
       </footer>
     </div>
-
+    <script src="javascripts/scale.fix.js"></script>
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
@@ -96,7 +170,6 @@
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
-
 
   </body>
 </html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Pries.github.io : My useful programming pages geared towards scientific programming" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Pries.github.io</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/pries">View on GitHub</a>
+
+          <h1 id="project_title">Pries.github.io</h1>
+          <h2 id="project_tagline">My useful programming pages geared towards scientific programming</h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="how-to-do-embarrassingly-parallel-processing-in-python-across-multiple-cores-and-multiple-computers" class="anchor" href="#how-to-do-embarrassingly-parallel-processing-in-python-across-multiple-cores-and-multiple-computers"><span class="octicon octicon-link"></span></a>How to do embarrassingly parallel processing in python across multiple cores and multiple computers</h1>
+
+<h2>
+<a name="what-types-of-code-is-this-good-for" class="anchor" href="#what-types-of-code-is-this-good-for"><span class="octicon octicon-link"></span></a>What types of code is this good for?</h2>
+
+<p>This sort of code is good for running embarrassingly parallel code.  Embarrassingly parallel code is where the the results from one calculation don't effect the result from other calculations.  </p>
+
+<p>Example of embarrassingly parallel code:</p>
+
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+  <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</pre></div>
+
+<p><code>sin(x[i])</code> doesn't care what <code>sin(x[i-1])</code> is.  So you could compute the values in any order.  Now this is a bad example since <code>sin</code> is not terribly computational intense compared to the overhead of parallel processing, but it gives you an idea of the sort of thing I'll be telling you python can trivially parallelize.</p>
+
+<h2>
+<a name="setup-1-computer" class="anchor" href="#setup-1-computer"><span class="octicon octicon-link"></span></a>Setup (1 computer)</h2>
+
+<p>What you need:</p>
+
+<ul>
+<li> Ipython (that's it!)</li>
+</ul><p>Instructions:
+1. at the command line type:
+<code>ipcluster start --n=4</code></p>
+
+<p>This sets up a cluster of processes for Ipython.  <code>n</code> is the number of processes to start, which should be equal to the number of cores you want to use.  Open another terminal and start and ipython (or ipython+pylab) session.</p>
+
+<h2>
+<a name="how-to-run-code-in-parallel-same-for-both-single-machine-and-multiple-machines" class="anchor" href="#how-to-run-code-in-parallel-same-for-both-single-machine-and-multiple-machines"><span class="octicon octicon-link"></span></a>How to run code in parallel (same for both single machine and multiple machines!!)</h2>
+
+<p>So to work this you need to set up your function to use python's map function.  </p>
+
+<h2>
+<a name="what-you-need-to-get-started-multiple-computers" class="anchor" href="#what-you-need-to-get-started-multiple-computers"><span class="octicon octicon-link"></span></a>What you need to get started (multiple computers)</h2>
+
+<ol>
+<li>IP address of the host computer</li>
+<li>Know where the ipython directory is on each computer</li>
+<li>All computers in the cluster can see the host computer</li>
+<li>Understand how python working directory and <code>$PYTHONPATH</code> affect how your code works
+<strong>Note</strong>:  I don't know if this will work across different architectures.  My Mac wouldn't play nice with the three computers running Linux and I haven't had a chance to troubleshoot it....</li>
+</ol>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-43010472-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>

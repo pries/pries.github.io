@@ -1,28 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Paul&#39;s Presumptions Python Pages by pries</title>
+    <meta name="viewport" content="width=640" />
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Paul&#39;s Personal Python Pages by pries</title>
   </head>
+
   <body>
-    <div class="wrapper">
+    <a id="forkme_banner" href="https://github.com/pries">View on GitHub</a>
+    <div class="shell">
+
       <header>
-        <h1>Paul&#39;s Presumptions Python Pages</h1>
-        <p>My useful programming pages geared towards scientific programming</p>
-
-
-        <p class="view"><a href="https://github.com/pries">View My GitHub Profile</a></p>
-
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Paul&#39;s Personal Python Pages</h1>
+            <h2>My useful programming pages geared towards scientific programming</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
       </header>
-      <section>
+
+      <div id="no-downloads">
+        <span class="inner">
+        </span>
+      </div>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
         <h1>
 <a name="how-to-do-embarrassingly-parallel-processing-in-python-across-multiple-cores-and-multiple-computers" class="anchor" href="#how-to-do-embarrassingly-parallel-processing-in-python-across-multiple-cores-and-multiple-computers"><span class="octicon octicon-link"></span></a>How to do embarrassingly parallel processing in python across multiple cores and multiple computers</h1>
 
@@ -64,21 +86,22 @@
 </ul><h2>
 <a name="how-to-run-code-in-parallel-same-for-both-single-machine-and-multiple-machines" class="anchor" href="#how-to-run-code-in-parallel-same-for-both-single-machine-and-multiple-machines"><span class="octicon octicon-link"></span></a>How to run code in parallel (same for both single machine and multiple machines!!)</h2>
 
-<p>So to work this you need to set up your function to use python's map function.  The non-parallel way of doing it (again, using the sin example from above):</p>
+<p>So to work this you need to set up your function to use python's built-in map function.  The non-parallel way of doing it (again, using the sin example from above):</p>
 
-<pre lang="y=map(np.sin,x)```"><code>
-Note that you can have more than one variable to iterate over with map, but for simplicity's sake I'm just dealing with one variable here.  Now for the parallel version:
+<div class="highlight"><pre><span class="n">y</span><span class="o">=</span><span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
 
-```python
-import numpy as np
-from IPython.parallel import Client
-rc=Client()
-dview=rc[:]
-dview.execute('import numpy as np')
-lview=rc.load_balanced_view()
-lview.block=True
-y=lview.map(np.sin,x)
-</code></pre>
+<p>Note that you can have more than one variable to iterate over with map, but for simplicity's sake I'm just dealing with one variable here.  Now for the parallel version:</p>
+
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">IPython.parallel</span> <span class="kn">import</span> <span class="n">Client</span>
+<span class="n">rc</span><span class="o">=</span><span class="n">Client</span><span class="p">()</span>
+<span class="n">dview</span><span class="o">=</span><span class="n">rc</span><span class="p">[:]</span>
+<span class="n">dview</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'import numpy as np'</span><span class="p">)</span>
+<span class="n">lview</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">load_balanced_view</span><span class="p">()</span>
+<span class="n">lview</span><span class="o">.</span><span class="n">block</span><span class="o">=</span><span class="bp">True</span>
+<span class="n">y</span><span class="o">=</span><span class="n">lview</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
 
 <p>That's it!! Now for a little bit of an explanation what's going on.  <code>Client()</code> is a client to your ipcluster that you already have running.  <code>dview</code> is a direct view, which is a direct connection to each of the processes. <code>dview</code> also lets you directly tell all the processes to do stuff, like say load the numpy library, using the <code>execute</code> function. <code>lview</code> is a load balanced view.  The difference between the two is that <code>dview</code> will take n chunks of data and divide them over m processes (i.e. each process gets n/m threads), but <code>lview</code> accounts for the fact that not every iteration will take the same amount of time to compute and balances the computation between processes.  This is especially important if you are running over multiple computers where the processors may have different speeds.</p>
 
@@ -155,11 +178,21 @@ This starts the controller process.  Your previous ipcluster command did this au
 
 <p>The above has security issues.  These can be fixed via ssh, but that will slow things down and is something I haven't had time to play with.  Firewalls are your friend.</p>
       </section>
+
       <footer>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>Projects by <a href="https://github.com/pries">pries</a> can be found on <a href="https://github.com/pries">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
       </footer>
+
     </div>
-    <script src="javascripts/scale.fix.js"></script>
+
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
